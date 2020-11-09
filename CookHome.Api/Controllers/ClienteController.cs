@@ -15,10 +15,10 @@ namespace CookHome.Api.Controllers
     public class ClienteController : ControllerBase
     {
         private readonly CookHomeContext _context;
-        private readonly IGoogleMapsServico _googleMapsServico;
+        private readonly IEnderecoServico _googleMapsServico;
 
 
-        public ClienteController(CookHomeContext context, IGoogleMapsServico googleMapsServico)
+        public ClienteController(CookHomeContext context, IEnderecoServico googleMapsServico)
         {
             _context = context;
             _googleMapsServico = googleMapsServico;
@@ -27,21 +27,28 @@ namespace CookHome.Api.Controllers
         [HttpGet("lista")]
         public ActionResult ObterTodosClientes()
         {
-            var clientes = _context.Cliente.Include(c => c.Cidade).ToList();
+            var clientes = _context.Cliente.ToList();
             return Ok(clientes);
         }
 
         [HttpGet("{id}")]
         public ActionResult ObterCliente(int id)
         {
-            var cliente = _context.Cliente.Include(c => c.Cidade).Where(cliente => cliente.Id == id).FirstOrDefault();
+            var cliente = _context.Cliente.Where(cliente => cliente.Id == id).FirstOrDefault();
             return Ok(cliente);
         }
 
         [HttpPost]
         public async Task<ActionResult> InserirCliente(Cliente cliente)
         {
-            var localizacao = await _googleMapsServico.ObterGeolocalizacao(cliente.Cep);
+            var consulta = _context.Cliente.Where(c => c.Email == cliente.Email).FirstOrDefault();
+            if (consulta != null)
+            {
+                ModelState.AddModelError("email", "email já cadastrado");
+                return BadRequest(ModelState);
+            }
+
+            var localizacao = await _googleMapsServico.ObterGeolocalizacao(cliente.EnderecoCompleto);
             if (localizacao != null)
             {
                 cliente.Latitude = localizacao.Latitude;
@@ -61,17 +68,7 @@ namespace CookHome.Api.Controllers
             if (cliente == null)
                 return NotFound();
 
-            cliente.Nome = requisicao.Nome;
-            cliente.SobreNome = requisicao.SobreNome;
-            cliente.Email = requisicao.Email;
-            cliente.Telefone = requisicao.Telefone;
-            cliente.Senha = requisicao.Senha;
-            cliente.CidadeId = requisicao.CidadeId;
-            cliente.Documento = requisicao.Documento;
-            cliente.Latitude = requisicao.Latitude;
-            cliente.Longitude = requisicao.Longitude;
-
-
+            cliente.Update(requisicao);
             _context.SaveChanges();
             return Ok();
         }

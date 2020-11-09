@@ -27,7 +27,10 @@ namespace CookHome.Api.Controllers
             if (cliente != null)
             {
                 if (cliente.Senha == autenticacao.Senha)
-                    return Ok(new { tipo = 1 });
+                {
+                    cliente.Tipo = 1;
+                    return Ok(cliente);
+                }
                 else
                 {
                     ModelState.AddModelError("Senha", "Senha não confere");
@@ -40,7 +43,10 @@ namespace CookHome.Api.Controllers
                 if(cozinheiro != null)
                 {
                     if (cozinheiro.Senha == autenticacao.Senha)
-                        return Ok(new { tipo = 2 });
+                    {
+                        cliente.Tipo = 2;
+                        return Ok(cliente);
+                    }
                     else
                     {
                         ModelState.AddModelError("Senha", "Senha não confere");

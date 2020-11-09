@@ -84,9 +84,7 @@ namespace CookHome.Api
             var google = new GoogleMapsConfiguracao();
             new ConfigureFromConfigurationOptions<GoogleMapsConfiguracao>(Configuration.GetSection("GoogleMaps")).Configure(google);
             services.AddSingleton(google);
-
-            services.AddHttpClient<IGoogleMapsServico, GoogleMapsServico>();
-            services.AddSingleton<IGoogleMapsServico, GoogleMapsServico>();
+            services.AddHttpClient<IEnderecoServico, GoogleMapsServico>();
         }
     }
 }
